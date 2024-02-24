@@ -1,0 +1,1 @@
+{"mappings":"AAAAA,MAAO","sources":["src/index.js"],"sourcesContent":["fetch ('https://pixabay.com/api/?key=42538770-38c8e4bc557ccec23452e1973&q=yellow+flowers&image_type=photo')\n//\n"],"names":["fetch"],"version":3,"file":"index.1755d752.js.map"}
