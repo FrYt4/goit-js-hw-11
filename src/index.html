@@ -5,12 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Page title</title>
     <script type="module" src="./index.js"></script>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simplelightbox/2.11.0/simple-lightbox.css" />
   </head>
-  <body>
+<body>
+  <div class="search-container">
+    <form class="search-form" id="search-form">
+      <input type="text" name="searchQuery" autocomplete="off" placeholder="Search images..."
+        class="search-form__input" />
+      <button type="submit" class="search-form__button">Search</button>
+    </form>
+  </div>
 
-<form class="search-form" id="search-form">
-  <input type="text" name="searchQuery" autocomplete="off" placeholder="Search images..." />
-  <button type="submit">Search</button>
-</form>
-  </body>
+  <div class="gallery-container">
+    <div class="gallery"></div>
+    <button type="button" class="load-button is-hidden">Load more</button>
+  </div>
+
+  <script type="module" src="./index.js"></script>
+</body>
 </html>
