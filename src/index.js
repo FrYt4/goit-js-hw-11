@@ -53,13 +53,14 @@ function onLoadButton(e) {
 
   fetchImages(search, page, perPage)
     .then(({ data }) => {
-      markup(data.hits);
+        markup(data.hits);
       const totalPages = Math.ceil(data.totalHits / perPage);
 
       if (page > totalPages) {
         onLoadButton.classList.add('is-hidden');
         alertEndOfSearch();
-      }
+        }
+        modalWindow();
     })
     .catch(error => console.log(error));
 }
@@ -87,7 +88,7 @@ function alertEndOfSearch() {
 }
 
 const modalWindow = function () {
-  const lightbox = new SimpleLightbox('.gallery a', {
+  const lightbox = new SimpleLightbox('.gallery', {
     captionsData: 'alt',
     captionDelay: 300,
   });
