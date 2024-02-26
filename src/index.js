@@ -1,111 +1,132 @@
+import axios from 'axios';
 import Notiflix from 'notiflix';
-import { renderImage } from './fetchImages';
-import { fetchImages } from './fetchImages';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 import { ranodmBackgroundImage } from './backgroundTools';
 
-const searchForm = document.getElementById('search-form');
-const loadMoreButton = document.querySelector('.load-more');
+const searchQuery = document.querySelector('#search-form');
+const gallery = document.querySelector('.gallery');
+const fetchBtn = document.querySelector('button[type="button"');
 
-// Funkcja obsługująca wyszukiwanie
-let currentPage = 1;
+let page = 1;
 let currentQuery = '';
-let totalDisplayedImages = 0; // Liczba obrazków wyświetlonych na stronie
+let totalHits = 0;
+let lightbox;
 
-// Funkcja obsługująca wyszukiwanie
-const handleSearch = async event => {
+const searchParams = new URLSearchParams({
+  key: '42459291-7f50c47c6b19e5b61fce58d70',
+  q: '',
+  image_type: 'photo',
+  orientation: 'horizontal',
+  safesearch: 'true',
+  page: page,
+  per_page: 40,
+});
+
+const fetchPhotos = async () => {
+  searchParams.set('q', searchQuery.elements[0].value.split(' ').join('+'));
+  const searchResults = await axios.get(
+    `https://pixabay.com/api/?${searchParams}`
+  );
+  return searchResults.data;
+};
+
+function renderPhotos(data, append = false) {
+  if (data.hits.length <= 0) {
+    Notiflix.Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+    gallery.innerHTML = '';
+  } else {
+    const markup = data.hits
+      .map(
+        ({
+          webformatURL,
+          largeImageURL,
+          tags,
+          likes,
+          views,
+          comments,
+          downloads,
+        }) => `<div class="photo-card"><a class="gallery__item" href="${largeImageURL}">
+  <img class="gallery__image" src="${webformatURL}" alt="${tags}" loading="lazy" /></a>
+  <div class="info">
+    <p class="info-item"><b>Likes: ${likes}</b></p>
+    <p class="info-item"><b>Views: ${views}</b></p>
+    <p class="info-item"><b>Comments: ${comments}</b></p>
+    <p class="info-item"><b>Downloads: ${downloads}</b></p>
+  </div>
+</div>`
+      )
+      .join('');
+
+    if (append) {
+      gallery.innerHTML += markup;
+    } else {
+      gallery.innerHTML = markup;
+    }
+
+    lightbox = new SimpleLightbox('.gallery a');
+
+    const { height: cardHeight } = document
+      .querySelector('.gallery')
+      .firstElementChild.getBoundingClientRect();
+
+    window.scrollBy({
+      top: cardHeight * 2,
+      behavior: 'smooth',
+    });
+  }
+}
+
+searchQuery.addEventListener('submit', async event => {
   event.preventDefault();
-  const query = searchForm.searchQuery.value.trim();
-  if (query === '') {
-    return; // Nie wykonuj wyszukiwania dla pustego zapytania
-  }
 
-  // Zapisz aktualne zapytanie
-  currentQuery = query;
-
-  // Wyczyść zawartość galerii i zresetuj liczbę wyświetlonych obrazków
-  document.querySelector('.gallery').innerHTML = '';
-  totalDisplayedImages = 0;
-
-  // Wyślij żądanie HTTP
-  const images = await fetchImages(query);
-  if (images.length === 0) {
-    Notiflix.Notify.info(
-      "We're sorry, but you've reached the end of search results."
-    );
-    loadMoreButton.style.display = 'none'; // Ukryj przycisk "Load more" na końcu wyników
+  const searchPhrase = searchQuery.elements[0].value.trim();
+  if (searchPhrase === '') {
+    Notiflix.Notify.warning('Please enter a search phrase!');
     return;
   }
 
-  // Zaktualizuj stronę i wyrenderuj obrazy
-  currentPage = 1;
-  renderImage(images);
+  try {
+    page = 1;
+    const photos = await fetchPhotos(searchQuery, page);
+    totalHits = photos.totalHits;
+    renderPhotos(photos);
 
-  // Ustaw tło na losowy obrazek z galerii
-  ranodmBackgroundImage(images);
+    if (photos.hits.length === 0) {
+      fetchBtn.classList.add('hidden');
+    } else {
+      fetchBtn.classList.remove('hidden');
+      const dataHits = photos.totalHits;
+      Notiflix.Notify.success(`Hooray! We found ${dataHits} images.`);
+    }
+  } catch (error) {
+    Notiflix.Notify.failure(`ERROR: ${error}`);
+  }
+});
 
-  // Zaktualizuj liczbę wyświetlonych obrazków
-  totalDisplayedImages += images.length;
+fetchBtn.addEventListener('click', async () => {
+  searchParams.set('page', ++page);
+  try {
+    const photos = await fetchPhotos(currentQuery, page);
+    renderPhotos(photos, true);
+    loadMorePhotos(photos.hits.length);
+    if (photos.hits.length === 0) {
+      fetchBtn.classList.add('hidden');
+    }
+  } catch (error) {
+    Notiflix.Notify.failure(`ERROR: ${error}`);
+  }
+});
 
-  // Pokaż przycisk "Load more", jeśli pobrano mniej niż 40 obrazków
-  if (images.length < 40) {
-    loadMoreButton.style.display = 'none';
-    Notiflix.Notify.info(
+function loadMorePhotos() {
+  if (page * 40 >= totalHits) {
+    fetchBtn.classList.add('hidden');
+    Notiflix.Notify.failure(
       "We're sorry, but you've reached the end of search results."
     );
   } else {
-    loadMoreButton.style.display = 'block';
+    fetchBtn.classList.remove('hidden');
   }
-
-  // Pokaż powiadomienie o liczbie znalezionych obrazków
-  Notiflix.Notify.success(`Hooray! We found ${totalDisplayedImages} images.`);
-};
-
-// Funkcja obsługująca ładowanie kolejnych obrazków
-const loadMoreImages = async () => {
-  currentPage++;
-  const previousImageCount = document.querySelectorAll('.photo-card').length; // Liczba obecnych obrazków
-  const images = await fetchImages(currentQuery, currentPage);
-  // Ukryj przycisk "Load more" jeśli nie ma więcej obrazków
-  if (images.length === 0) {
-    Notiflix.Notify.info(
-      "We're sorry, but you've reached the end of search results."
-    );
-    loadMoreButton.style.display = 'none'; // Ukryj przycisk "Load more" na końcu wyników
-    return;
-  }
-
-  // Renderuj nowe obrazy na końcu galerii
-  renderImage(images);
-
-  // Ustaw tło na losowy obrazek z galerii
-  ranodmBackgroundImage(images);
-
-  // Sprawdź, czy faktycznie dodano nowe obrazy
-  const newImageCount =
-    document.querySelectorAll('.photo-card').length - previousImageCount;
-  if (newImageCount > 0) {
-    // Przewiń widok do góry nowych obrazków
-    const firstNewImage = document.querySelector('.gallery').lastElementChild;
-    firstNewImage.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    // Zaktualizuj liczbę wyświetlonych obrazków
-    totalDisplayedImages += newImageCount;
-
-    // Wyświetl informację o liczbie nowych obrazków
-    Notiflix.Notify.success(`${totalDisplayedImages} images loaded.`);
-  } else {
-    Notiflix.Notify.info('No new images loaded.');
-  }
-
-  // Ukryj przycisk "Load more" jeśli pobrano mniej niż 40 obrazków
-  if (images.length < 40) {
-    loadMoreButton.style.display = 'none';
-    Notiflix.Notify.info(
-      "We're sorry, but you've reached the end of search results."
-    );
-  }
-};
-
-searchForm.addEventListener('submit', handleSearch);
-loadMoreButton.addEventListener('click', loadMoreImages);
-loadMoreButton.style.display = 'none';
+}
