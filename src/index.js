@@ -92,7 +92,7 @@ searchQuery.addEventListener('submit', async event => {
     page = 1;
     const photos = await fetchPhotos(searchQuery, page);
     totalHits = photos.totalHits;
-    renderPhotos(photos);
+      renderPhotos(photos);
 
     if (photos.hits.length === 0) {
       fetchBtn.classList.add('hidden');
@@ -114,7 +114,7 @@ fetchBtn.addEventListener('click', async () => {
     loadMorePhotos(photos.hits.length);
     if (photos.hits.length === 0) {
         fetchBtn.classList.add('hidden');
-
+        ranodmBackgroundImage(photos);
     }
   } catch (error) {
     Notiflix.Notify.failure(`ERROR: ${error}`);

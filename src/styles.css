@@ -17,7 +17,7 @@ button {
     border-width: 0;
     box-shadow: rgba(57, 31, 91, 0.24) 0 2px 2px,
         rgba(132, 201, 134, 0.4) 0 8px 12px;
-    color: #ffffff;
+    color: #e21313;
     cursor: pointer;
     display: flex;
     font-size: 18px;
@@ -44,7 +44,7 @@ h1 {
     text-align: center;
     text-shadow: 2px 4px 3px rgba(0, 0, 0, 0.34);
     font-size: 50px;
-    color: #ffffff;
+    color: #d30202;
 }
 
 .hidden {
