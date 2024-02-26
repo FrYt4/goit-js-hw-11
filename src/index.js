@@ -1,96 +1,111 @@
-import { fetchImages } from './fetchImages';
-import { markup } from './markup';
 import Notiflix from 'notiflix';
-import SimpleLightbox from 'simplelightbox';
-import 'simplelightbox/dist/simple-lightbox.min.css';
+import { renderImage } from './fetchImages';
+import { fetchImages } from './fetchImages';
+import { ranodmBackgroundImage } from './backgroundTools';
 
-const searchForm = document.querySelector('#search-form');
-const gallery = document.querySelector('.gallery');
-const loadButton = document.querySelector('.load-button');
-let search = '';
-let page = 1;
-let perPage = 20;
+const searchForm = document.getElementById('search-form');
+const loadMoreButton = document.querySelector('.load-more');
 
-// eventlisteners
+// Funkcja obsługująca wyszukiwanie
+let currentPage = 1;
+let currentQuery = '';
+let totalDisplayedImages = 0; // Liczba obrazków wyświetlonych na stronie
 
-searchForm.addEventListener('submit', onSubmit);
-loadButton.addEventListener('click', onLoadButton);
+// Funkcja obsługująca wyszukiwanie
+const handleSearch = async event => {
+  event.preventDefault();
+  const query = searchForm.searchQuery.value.trim();
+  if (query === '') {
+    return; // Nie wykonuj wyszukiwania dla pustego zapytania
+  }
 
-// events
+  // Zapisz aktualne zapytanie
+  currentQuery = query;
 
-function onSubmit(e) {
-  e.preventDefault();
+  // Wyczyść zawartość galerii i zresetuj liczbę wyświetlonych obrazków
+  document.querySelector('.gallery').innerHTML = '';
+  totalDisplayedImages = 0;
 
-  search = e.currentTarget.searchQuery.value.trim();
-  gallery.innerHTML = '';
-  loadButton.classList.add('is-hidden');
-
-  if (search === '') {
-    alertNoEmptySearch();
+  // Wyślij żądanie HTTP
+  const images = await fetchImages(query);
+  if (images.length === 0) {
+    Notiflix.Notify.info(
+      "We're sorry, but you've reached the end of search results."
+    );
+    loadMoreButton.style.display = 'none'; // Ukryj przycisk "Load more" na końcu wyników
     return;
   }
 
-  fetchImages(search, page, perPage)
-    .then(({ data }) => {
-      if (data.totalHits === 0) {
-        alertNotFound();
-      } else {
-        markup(data.hits);
-        alertImgFound(data);
-      }
-      if (data.totalHits > perPage) {
-        loadButton.classList.remove('is-hidden');
-      }
-    })
-    .catch(error => console.log(error))
-    .finally(() => {
-      searchForm.reset();
-    });
-}
+  // Zaktualizuj stronę i wyrenderuj obrazy
+  currentPage = 1;
+  renderImage(images);
 
-function onLoadButton(e) {
-  page += 1;
+  // Ustaw tło na losowy obrazek z galerii
+  ranodmBackgroundImage(images);
 
-  fetchImages(search, page, perPage)
-    .then(({ data }) => {
-        markup(data.hits);
-      const totalPages = Math.ceil(data.totalHits / perPage);
+  // Zaktualizuj liczbę wyświetlonych obrazków
+  totalDisplayedImages += images.length;
 
-      if (page > totalPages) {
-        onLoadButton.classList.add('is-hidden');
-        alertEndOfSearch();
-        }
-        modalWindow();
-    })
-    .catch(error => console.log(error));
-}
+  // Pokaż przycisk "Load more", jeśli pobrano mniej niż 40 obrazków
+  if (images.length < 40) {
+    loadMoreButton.style.display = 'none';
+    Notiflix.Notify.info(
+      "We're sorry, but you've reached the end of search results."
+    );
+  } else {
+    loadMoreButton.style.display = 'block';
+  }
 
-function alertImgFound(data) {
-  Notiflix.Notify.success(`${data.totalHits} images found.`);
-}
-
-function alertNotFound() {
-  Notiflix.Notify.failure(
-    'Sorry, there are no images matching your search query. Please try again.'
-  );
-}
-
-function alertNoEmptySearch() {
-  Notiflix.Notify.failure(
-    'The search string cannot be empty. Please specify your search query.'
-  );
-}
-
-function alertEndOfSearch() {
-  Notiflix.Notify.failure(
-    "We're sorry, but you've reached the end of search results."
-  );
-}
-
-const modalWindow = function () {
-  const lightbox = new SimpleLightbox('.gallery', {
-    captionsData: 'alt',
-    captionDelay: 300,
-  });
-  return lightbox;
+  // Pokaż powiadomienie o liczbie znalezionych obrazków
+  Notiflix.Notify.success(`Hooray! We found ${totalDisplayedImages} images.`);
 };
+
+// Funkcja obsługująca ładowanie kolejnych obrazków
+const loadMoreImages = async () => {
+  currentPage++;
+  const previousImageCount = document.querySelectorAll('.photo-card').length; // Liczba obecnych obrazków
+  const images = await fetchImages(currentQuery, currentPage);
+  // Ukryj przycisk "Load more" jeśli nie ma więcej obrazków
+  if (images.length === 0) {
+    Notiflix.Notify.info(
+      "We're sorry, but you've reached the end of search results."
+    );
+    loadMoreButton.style.display = 'none'; // Ukryj przycisk "Load more" na końcu wyników
+    return;
+  }
+
+  // Renderuj nowe obrazy na końcu galerii
+  renderImage(images);
+
+  // Ustaw tło na losowy obrazek z galerii
+  ranodmBackgroundImage(images);
+
+  // Sprawdź, czy faktycznie dodano nowe obrazy
+  const newImageCount =
+    document.querySelectorAll('.photo-card').length - previousImageCount;
+  if (newImageCount > 0) {
+    // Przewiń widok do góry nowych obrazków
+    const firstNewImage = document.querySelector('.gallery').lastElementChild;
+    firstNewImage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Zaktualizuj liczbę wyświetlonych obrazków
+    totalDisplayedImages += newImageCount;
+
+    // Wyświetl informację o liczbie nowych obrazków
+    Notiflix.Notify.success(`${totalDisplayedImages} images loaded.`);
+  } else {
+    Notiflix.Notify.info('No new images loaded.');
+  }
+
+  // Ukryj przycisk "Load more" jeśli pobrano mniej niż 40 obrazków
+  if (images.length < 40) {
+    loadMoreButton.style.display = 'none';
+    Notiflix.Notify.info(
+      "We're sorry, but you've reached the end of search results."
+    );
+  }
+};
+
+searchForm.addEventListener('submit', handleSearch);
+loadMoreButton.addEventListener('click', loadMoreImages);
+loadMoreButton.style.display = 'none';
