@@ -16,8 +16,8 @@ button {
     border-radius: 42px;
     border-width: 0;
     box-shadow: rgba(57, 31, 91, 0.24) 0 2px 2px,
-        rgba(132, 201, 134, 0.4) 0 8px 12px;
-    color: #e21313;
+        rgba(23, 137, 47, 0.6) 0 8px 12px;
+    color: #ffffff;
     cursor: pointer;
     display: flex;
     font-size: 18px;
@@ -30,7 +30,7 @@ button {
     text-align: center;
     text-decoration: none;
     text-shadow: rgba(255, 255, 255, 0.4) 0 0 4px,
-        rgba(255, 255, 255, 0.2) 0 0 12px, rgba(23, 137, 47, 0.6) 1px 1px 4px,
+        rgba(255, 255, 255, 0.2) 0 0 12px, rgba(23, 137, 47, 0.9) 1px 1px 4px,
         rgba(57, 31, 91, 0.32) 4px 4px 16px;
     user-select: none;
     -webkit-user-select: none;
@@ -44,7 +44,7 @@ h1 {
     text-align: center;
     text-shadow: 2px 4px 3px rgba(0, 0, 0, 0.34);
     font-size: 50px;
-    color: #d30202;
+    color: #0cbbec;
 }
 
 .hidden {
@@ -53,7 +53,7 @@ h1 {
 
 .search-container {
     width: 500px;
-    background-color: #0cb331;
+    background-color: rgba(16, 162, 203,10%);
     opacity: 80%;
     border-radius: 42px;
     margin: auto;
@@ -62,6 +62,10 @@ h1 {
     box-shadow: 11px 11px 17px -6px rgba(0, 0, 0, 0.75);
     margin-bottom: 50px;
     margin-top: 25px;
+}
+.search-container:hover,
+.search-container:focus{
+    background-color:rgba(16, 162, 203,30%); ;
 }
 
 .search-form {
