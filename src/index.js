@@ -9,7 +9,7 @@ const gallery = document.querySelector('.gallery');
 const loadButton = document.querySelector('.load-button');
 let search = '';
 let page = 1;
-let perPage = 40;
+let perPage = 20;
 
 // eventlisteners
 
