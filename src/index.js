@@ -2,7 +2,7 @@ import axios from 'axios';
 import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-import { ranodmBackgroundImage } from './backgroundTools';
+
 
 const searchQuery = document.querySelector('#search-form');
 const gallery = document.querySelector('.gallery');
@@ -14,7 +14,7 @@ let totalHits = 0;
 let lightbox;
 
 const searchParams = new URLSearchParams({
-  key: '42459291-7f50c47c6b19e5b61fce58d70',
+  key: '42538770-38c8e4bc557ccec23452e1973',
   q: '',
   image_type: 'photo',
   orientation: 'horizontal',
@@ -113,7 +113,8 @@ fetchBtn.addEventListener('click', async () => {
     renderPhotos(photos, true);
     loadMorePhotos(photos.hits.length);
     if (photos.hits.length === 0) {
-      fetchBtn.classList.add('hidden');
+        fetchBtn.classList.add('hidden');
+
     }
   } catch (error) {
     Notiflix.Notify.failure(`ERROR: ${error}`);
